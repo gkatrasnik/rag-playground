@@ -2,6 +2,13 @@
 
 This project is a playground app for Retrieval-Augmented Generation (RAG).
 
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+-   [Docker](https://docs.docker.com/get-docker/)
+-   [Docker Compose](https://docs.docker.com/compose/install/)
+
 ## Getting Started
 
 1.  **Setup Ollama Models:**
