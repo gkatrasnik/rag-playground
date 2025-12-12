@@ -8,6 +8,7 @@ import {
   RunnableSequence,
   RunnablePassthrough,
 } from "@langchain/core/runnables";
+import { CHROMA_URL, OLLAMA_URL } from "./config";
 
 export class RAGApplication {
   private vectorStore: Chroma | null = null;
@@ -17,25 +18,25 @@ export class RAGApplication {
   constructor() {
     this.llm = new Ollama({
       model: "gemma3:1b",
-      temperature: 0,
-      baseUrl: "http://ollama:11434",
+      temperature: 0.5,
+      baseUrl: OLLAMA_URL,
     });
 
     this.embeddings = new OllamaEmbeddings({
       model: "nomic-embed-text",
-      baseUrl: "http://ollama:11434",
+      baseUrl: OLLAMA_URL,
     });
   }
 
   async init() {
     this.vectorStore = await Chroma.fromExistingCollection(this.embeddings, {
       collectionName: "rag-test-collection",
-      url: "http://chroma:8000",
+      url: CHROMA_URL,
     }).catch(async () => {
       // If the collection does not exist, it will be created when documents are added.
       return new Chroma(this.embeddings, {
         collectionName: "rag-test-collection",
-        url: "http://chroma:8000",
+        url: CHROMA_URL,
       });
     });
   }
@@ -60,11 +61,20 @@ export class RAGApplication {
 
     const retriever = this.vectorStore.asRetriever();
 
-    const template = `Answer the question based only on the following context:
-{context}
+//     const template = `Answer the question based only on the following context:
+// {context}
+
+// Question: {question}
+// `;
+const template = `You are a helpful assistant. Use the following pieces of context to answer the question at the end.
+If you don't know the answer from the context provided, just say that you don't know, don't try to make up an answer.
+Provide a conversational and well-formatted answer.
+
+Context: {context}
 
 Question: {question}
-`;
+
+Helpful Answer:`;
     const prompt = ChatPromptTemplate.fromTemplate(template);
 
     const chain = RunnableSequence.from([

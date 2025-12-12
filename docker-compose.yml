@@ -2,8 +2,13 @@ version: '3.8'
 services:
   app:
     build: .
+    env_file:
+      - .env
+    environment:
+      - CHROMA_HOST=chroma
+      - OLLAMA_HOST=ollama
     ports:
-      - "3000:3000"
+      - "${APP_PORT}:${APP_PORT}"
     depends_on:
       - chroma
       - ollama
@@ -15,14 +20,16 @@ services:
   chroma:
     image: chromadb/chroma
     ports:
-      - "8000:8000"
+      - "${CHROMA_PORT}:${CHROMA_PORT}"
+    volumes:
+      - chroma-data:/chroma/.chroma/
     networks:
       - rag-net
 
   ollama:
     image: ollama/ollama
     ports:
-      - "11434:11434"
+      - "${OLLAMA_PORT}:${OLLAMA_PORT}"
     volumes:
       - ollama-data:/root/.ollama
     networks:
@@ -33,3 +40,4 @@ networks:
 
 volumes:
   ollama-data:
+  chroma-data:

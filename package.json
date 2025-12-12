@@ -4,7 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node src/index.ts"
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "dev:all": "npm run dev:services:up && npm run dev",
+    "dev:services:up": "docker-compose up -d chroma ollama",
+    "dev:services:down": "docker-compose down"
   },
   "keywords": [],
   "author": "",
@@ -19,7 +24,7 @@
     "@langchain/community": "^1.0.7",
     "@langchain/core": "^1.1.4",
     "@langchain/ollama": "^1.0.3",
-    "chromadb": "^3.1.6",
+    "dotenv": "^17.2.3",
     "langchain": "^1.1.5"
   }
 }
