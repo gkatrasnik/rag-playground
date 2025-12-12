@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG Playground</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; }
+        #response { margin-top: 1em; padding: 1em; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h1>RAG Playground</h1>
+    <form id="query-form">
+        <input type="text" id="question" placeholder="Ask a question" size="50">
+        <button type="submit">Submit</button>
+    </form>
+    <h2>Response:</h2>
+    <div id="response"></div>
+
+    <script>
+        const form = document.getElementById('query-form');
+        const questionInput = document.getElementById('question');
+        const responseDiv = document.getElementById('response');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const question = questionInput.value;
+            responseDiv.textContent = 'Loading...';
+
+            const response = await fetch(`/rag/query?question=${encodeURIComponent(question)}`);
+            const text = await response.text();
+
+            responseDiv.textContent = text;
+        });
+    </script>
+</body>
+</html>

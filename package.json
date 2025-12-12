@@ -4,10 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "dev": "ts-node src/index.ts",
-    "dev:all": "npm run dev:services:up && npm run dev",
+    "build": "nest build",
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "start:debug": "nest start --debug --watch",
+    "start:prod": "node dist/main",
+    "dev:all": "npm run dev:services:up && npm run start:dev",
     "dev:services:up": "docker-compose up -d chroma ollama",
     "dev:services:down": "docker-compose down"
   },

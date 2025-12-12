@@ -1,20 +1,33 @@
-# Use an official Node.js runtime as a parent image
-FROM node:20-slim
+# Stage 1: Build the application
+FROM node:20-slim AS builder
 
-# Set the working directory in the container
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json to the working directory
+# Copy package files and install dependencies
 COPY package*.json ./
-
-# Install any needed packages
 RUN npm install
 
 # Copy the rest of the application's source code
 COPY . .
 
-# Make port 3000 available to the world outside this container
+# Build the application
+RUN npm run build
+
+# Stage 2: Create the production image
+FROM node:20-slim
+
+WORKDIR /usr/src/app
+
+# Copy production dependencies from the builder stage
+COPY --from=builder /usr/src/app/node_modules ./node_modules
+COPY package*.json ./
+
+# Copy the built application and public assets
+COPY --from=builder /usr/src/app/dist ./dist
+COPY --from=builder /usr/src/app/public ./public
+
+# Expose the port the app runs on
 EXPOSE 3000
 
-# Run the app when the container launches
-CMD ["npm", "start"]
+# Run the application
+CMD ["npm", "run", "start:prod"]
