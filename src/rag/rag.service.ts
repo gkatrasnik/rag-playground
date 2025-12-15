@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Ollama } from '@langchain/ollama';
 import { OllamaEmbeddings } from '@langchain/ollama';
 import { Chroma } from '@langchain/community/vectorstores/chroma';
@@ -8,14 +8,16 @@ import { ChatPromptTemplate } from '@langchain/core/prompts';
 import {
   RunnableSequence,
   RunnablePassthrough,
+  RunnableLambda
 } from '@langchain/core/runnables';
+import { ChromaClient } from 'chromadb';
 import { CHROMA_URL, OLLAMA_URL } from '../config';
 
 @Injectable()
-export class RagService implements OnModuleInit {
-  private vectorStore: Chroma | null = null;
+export class RagService {
   private llm: Ollama;
   private embeddings: OllamaEmbeddings;
+  private chromaClient: ChromaClient;
 
   constructor() {
     this.llm = new Ollama({
@@ -28,39 +30,52 @@ export class RagService implements OnModuleInit {
       model: 'nomic-embed-text',
       baseUrl: OLLAMA_URL,
     });
+
+    this.chromaClient = new ChromaClient({ path: CHROMA_URL });
   }
 
-  async onModuleInit() {
-    await this.init();
-  }
-
-  private async init() {
-    this.vectorStore = await Chroma.fromExistingCollection(this.embeddings, {
-      collectionName: 'rag-test-collection',
+  async createTopic(topic: string) {
+    const vectorStore = new Chroma(this.embeddings, {
+      collectionName: topic,
       url: CHROMA_URL,
-    }).catch(async () => {
-      return new Chroma(this.embeddings, {
-        collectionName: 'rag-test-collection',
-        url: CHROMA_URL,
-      });
     });
+
+    // Add and immediately delete a dummy document to force collection creation
+    // with the correct embedding function.
+    const tempId = `init-${Date.now()}`;
+    await vectorStore.addDocuments(
+      [{ pageContent: 'init', metadata: { source: 'init' } }],
+      { ids: [tempId] },
+    );
+    await vectorStore.delete({ ids: [tempId] });
   }
 
-  async addDocuments(documents: Document[], ids?: string[]) {
-    if (!this.vectorStore) {
-      await this.init();
-    }
-    if (this.vectorStore) {
-      await this.vectorStore.addDocuments(documents, { ids });
-    }
+  async deleteTopic(topic: string) {
+    await this.chromaClient.deleteCollection({ name: topic });
   }
 
-  async query(question: string) {
-    if (!this.vectorStore) {
-      throw new Error('Vector store not initialized');
-    }
+  async listTopics() {
+    const collections = await this.chromaClient.listCollections();
+    return collections.map((c) => c.name);
+  }
 
-    const retriever = this.vectorStore.asRetriever();
+  async addDocuments(
+    topic: string,
+    documents: Document[]
+  ) {
+    const vectorStore = new Chroma(this.embeddings, {
+      collectionName: topic,
+      url: CHROMA_URL,
+    });
+    await vectorStore.addDocuments(documents);
+  }
+
+  async query(topic: string, question: string) {
+    const vectorStore = new Chroma(this.embeddings, {
+      collectionName: topic,
+      url: CHROMA_URL,
+    });
+    const retriever = vectorStore.asRetriever();
 
     const template = `You are a helpful assistant. Use the following pieces of context to answer the question at the end.
 If you don't know the answer from the context provided, just say that you don't know, don't try to make up an answer.
@@ -75,9 +90,14 @@ Helpful Answer:`;
 
     const chain = RunnableSequence.from([
       {
-        context: retriever.pipe((docs) => {
-          return docs.map((d) => d.pageContent).join('\n');
-        }),
+        context: retriever.pipe(
+          new RunnableLambda({
+            func: (docs) => {
+              console.log('Retrieved documents:', docs);
+              return docs.map((d) => d.pageContent).join('\n');
+            },
+          }),
+        ),
         question: new RunnablePassthrough(),
       },
       prompt,

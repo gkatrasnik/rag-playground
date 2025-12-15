@@ -9,7 +9,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "dev:all": "npm run dev:services:up && npm run start:dev",
+    "dev:all": "npm run dev:services:up && npm run start:debug",
     "dev:services:up": "docker-compose up -d chroma ollama",
     "dev:services:down": "docker-compose down"
   },
@@ -20,6 +20,7 @@
   "devDependencies": {
     "@nestjs/cli": "^11.0.14",
     "@types/express": "^5.0.6",
+    "@types/multer": "^2.0.0",
     "@types/node": "^24.10.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"

@@ -1,38 +1,167 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RAG Playground</title>
     <style>
-        body { font-family: sans-serif; margin: 2em; }
-        #response { margin-top: 1em; padding: 1em; border: 1px solid #ccc; }
+      body {
+        font-family: sans-serif;
+        margin: 2em;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      #content {
+        width: 80%;
+        max-width: 800px;
+      }
+      #response,
+      #topics-list {
+        margin-top: 1em;
+        padding: 1em;
+        border: 1px solid #ccc;
+        min-height: 50px;
+      }
+      form {
+        margin-bottom: 1em;
+      }
+      button {
+        margin-left: 0.5em;
+      }
     </style>
-</head>
-<body>
-    <h1>RAG Playground</h1>
-    <form id="query-form">
-        <input type="text" id="question" placeholder="Ask a question" size="50">
+  </head>
+  <body>
+    <div id="content">
+      <h1>RAG Playground</h1>
+
+      <h2>Topics</h2>
+      <div id="topics-list"></div>
+      <form id="topic-form">
+        <input
+          type="text"
+          id="topic-name"
+          placeholder="New topic name"
+          required
+        />
+        <button type="submit">Create Topic</button>
+      </form>
+
+      <h2>Upload Documents</h2>
+      <form id="upload-form">
+        <select id="upload-topic-select" required></select>
+        <input type="file" id="files" multiple required />
+        <button type="submit">Upload</button>
+      </form>
+
+      <h2>Query a Topic</h2>
+      <form id="query-form">
+        <select id="query-topic-select" required></select>
+        <input
+          type="text"
+          id="question"
+          placeholder="Ask a question"
+          size="50"
+          required
+        />
         <button type="submit">Submit</button>
-    </form>
-    <h2>Response:</h2>
-    <div id="response"></div>
+      </form>
+
+      <h2>Response:</h2>
+      <div id="response"></div>
+    </div>
 
     <script>
-        const form = document.getElementById('query-form');
-        const questionInput = document.getElementById('question');
-        const responseDiv = document.getElementById('response');
+      const topicForm = document.getElementById('topic-form');
+      const topicNameInput = document.getElementById('topic-name');
+      const topicsListDiv = document.getElementById('topics-list');
+      const uploadForm = document.getElementById('upload-form');
+      const uploadTopicSelect = document.getElementById('upload-topic-select');
+      const filesInput = document.getElementById('files');
+      const queryForm = document.getElementById('query-form');
+      const queryTopicSelect = document.getElementById('query-topic-select');
+      const questionInput = document.getElementById('question');
+      const responseDiv = document.getElementById('response');
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const question = questionInput.value;
-            responseDiv.textContent = 'Loading...';
+      async function fetchTopics() {
+        const response = await fetch('/rag/topics');
+        const topics = await response.json();
+        topicsListDiv.innerHTML = '';
+        uploadTopicSelect.innerHTML = '';
+        queryTopicSelect.innerHTML = '';
 
-            const response = await fetch(`/rag/query?question=${encodeURIComponent(question)}`);
-            const text = await response.text();
+        topics.forEach((topic) => {
+          const topicElement = document.createElement('div');
+          topicElement.textContent = topic;
+          const deleteButton = document.createElement('button');
+          deleteButton.textContent = 'Delete';
+          deleteButton.onclick = () => deleteTopic(topic);
+          topicElement.appendChild(deleteButton);
+          topicsListDiv.appendChild(topicElement);
 
-            responseDiv.textContent = text;
+          const option1 = document.createElement('option');
+          option1.value = topic;
+          option1.textContent = topic;
+          uploadTopicSelect.appendChild(option1);
+
+          const option2 = document.createElement('option');
+          option2.value = topic;
+          option2.textContent = topic;
+          queryTopicSelect.appendChild(option2);
         });
+      }
+
+      async function deleteTopic(topic) {
+        if (confirm(`Are you sure you want to delete the topic "${topic}"?`)) {
+          await fetch(`/rag/topics/${topic}`, { method: 'DELETE' });
+          fetchTopics();
+        }
+      }
+
+      topicForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const topicName = topicNameInput.value;
+        await fetch('/rag/topics', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ topic: topicName }),
+        });
+        topicNameInput.value = '';
+        fetchTopics();
+      });
+
+      uploadForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const topic = uploadTopicSelect.value;
+        const formData = new FormData();
+        for (const file of filesInput.files) {
+          formData.append('files', file);
+        }
+
+        responseDiv.textContent = 'Uploading and indexing...';
+        await fetch(`/rag/topics/${topic}/documents`, {
+          method: 'POST',
+          body: formData,
+        });
+        responseDiv.textContent = 'Upload complete.';
+        filesInput.value = '';
+      });
+
+      queryForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const topic = queryTopicSelect.value;
+        const question = questionInput.value;
+        responseDiv.textContent = 'Loading...';
+
+        const response = await fetch(
+          `/rag/topics/${topic}/query?question=${encodeURIComponent(question)}`,
+        );
+        const text = await response.text();
+
+        responseDiv.textContent = text;
+      });
+
+      fetchTopics();
     </script>
-</body>
+  </body>
 </html>
