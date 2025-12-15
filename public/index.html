@@ -29,6 +29,14 @@
       button {
         margin-left: 0.5em;
       }
+      .topic-container {
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+      }
+      .documents-list {
+        padding-left: 20px;
+      }
     </style>
   </head>
   <body>
@@ -57,6 +65,7 @@
       <h2>Query a Topic</h2>
       <form id="query-form">
         <select id="query-topic-select" required></select>
+        <div id="query-documents-container"></div>
         <input
           type="text"
           id="question"
@@ -80,6 +89,9 @@
       const filesInput = document.getElementById('files');
       const queryForm = document.getElementById('query-form');
       const queryTopicSelect = document.getElementById('query-topic-select');
+      const queryDocumentsContainer = document.getElementById(
+        'query-documents-container',
+      );
       const questionInput = document.getElementById('question');
       const responseDiv = document.getElementById('response');
 
@@ -91,13 +103,24 @@
         queryTopicSelect.innerHTML = '';
 
         topics.forEach((topic) => {
-          const topicElement = document.createElement('div');
-          topicElement.textContent = topic;
+          const topicContainer = document.createElement('div');
+          topicContainer.className = 'topic-container';
+
+          const topicHeader = document.createElement('h3');
+          topicHeader.textContent = topic;
+          topicHeader.style.cursor = 'pointer';
+          topicHeader.onclick = () => toggleDocuments(topic, topicContainer);
+          topicContainer.appendChild(topicHeader);
+
           const deleteButton = document.createElement('button');
-          deleteButton.textContent = 'Delete';
-          deleteButton.onclick = () => deleteTopic(topic);
-          topicElement.appendChild(deleteButton);
-          topicsListDiv.appendChild(topicElement);
+          deleteButton.textContent = 'Delete Topic';
+          deleteButton.onclick = (e) => {
+            e.stopPropagation();
+            deleteTopic(topic);
+          };
+          topicHeader.appendChild(deleteButton);
+
+          topicsListDiv.appendChild(topicContainer);
 
           const option1 = document.createElement('option');
           option1.value = topic;
@@ -109,11 +132,52 @@
           option2.textContent = topic;
           queryTopicSelect.appendChild(option2);
         });
+        if (topics.length > 0) {
+          updateQueryDocuments(topics[0]);
+        }
+      }
+
+      async function toggleDocuments(topic, container) {
+        const documentsList = container.querySelector('.documents-list');
+        if (documentsList) {
+          documentsList.remove();
+        } else {
+          const response = await fetch(`/rag/topics/${topic}/documents`);
+          const documents = await response.json();
+          const newList = document.createElement('div');
+          newList.className = 'documents-list';
+          documents.forEach((doc) => {
+            const docElement = document.createElement('div');
+            docElement.textContent = doc;
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Delete';
+            deleteButton.onclick = (e) => {
+              e.stopPropagation();
+              deleteDocument(topic, doc);
+            };
+            docElement.appendChild(deleteButton);
+            newList.appendChild(docElement);
+          });
+          container.appendChild(newList);
+        }
       }
 
       async function deleteTopic(topic) {
         if (confirm(`Are you sure you want to delete the topic "${topic}"?`)) {
           await fetch(`/rag/topics/${topic}`, { method: 'DELETE' });
+          fetchTopics();
+        }
+      }
+
+      async function deleteDocument(topic, filename) {
+        if (
+          confirm(
+            `Are you sure you want to delete the document "${filename}" from "${topic}"?`,
+          )
+        ) {
+          await fetch(`/rag/topics/${topic}/documents/${filename}`, {
+            method: 'DELETE',
+          });
           fetchTopics();
         }
       }
@@ -145,19 +209,55 @@
         });
         responseDiv.textContent = 'Upload complete.';
         filesInput.value = '';
+        fetchTopics();
       });
+
+      queryTopicSelect.addEventListener('change', (e) => {
+        updateQueryDocuments(e.target.value);
+      });
+
+      async function updateQueryDocuments(topic) {
+        const response = await fetch(`/rag/topics/${topic}/documents`);
+        const documents = await response.json();
+        queryDocumentsContainer.innerHTML = '';
+        documents.forEach((doc) => {
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.name = 'documentsToUse';
+          checkbox.value = doc;
+          checkbox.id = `doc-${doc}`;
+          const label = document.createElement('label');
+          label.htmlFor = `doc-${doc}`;
+          label.textContent = doc;
+          const br = document.createElement('br');
+          queryDocumentsContainer.appendChild(checkbox);
+          queryDocumentsContainer.appendChild(label);
+          queryDocumentsContainer.appendChild(br);
+        });
+      }
 
       queryForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const topic = queryTopicSelect.value;
         const question = questionInput.value;
+        const selectedDocuments = Array.from(
+          queryDocumentsContainer.querySelectorAll(
+            'input[name="documentsToUse"]:checked',
+          ),
+        ).map((cb) => cb.value);
+
+        let url = `/rag/topics/${topic}/query?question=${encodeURIComponent(
+          question,
+        )}`;
+        if (selectedDocuments.length > 0) {
+          url += `&${selectedDocuments
+            .map((d) => `documentsToUse=${encodeURIComponent(d)}`)
+            .join('&')}`;
+        }
+
         responseDiv.textContent = 'Loading...';
-
-        const response = await fetch(
-          `/rag/topics/${topic}/query?question=${encodeURIComponent(question)}`,
-        );
+        const response = await fetch(url);
         const text = await response.text();
-
         responseDiv.textContent = text;
       });
 

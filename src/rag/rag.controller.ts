@@ -43,6 +43,24 @@ export class RagController {
     return this.ragService.listTopics();
   }
 
+  @Get('topics/:topic/documents')
+  async listDocuments(@Param('topic') topic: string) {
+    const topicSlug = slugify(topic);
+    return this.ragService.listDocuments(topicSlug);
+  }
+
+  @Delete('topics/:topic/documents/:filename')
+  async deleteDocument(
+    @Param('topic') topic: string,
+    @Param('filename') filename: string,
+  ) {
+    const topicSlug = slugify(topic);
+    await this.ragService.deleteDocument(topicSlug, filename);
+    return {
+      message: `Document '${filename}' deleted from topic '${topic}' successfully`,
+    };
+  }
+
   @Post('topics/:topic/documents')
   @UseInterceptors(FilesInterceptor('files'))
   async addDocuments(
@@ -75,8 +93,14 @@ export class RagController {
   async query(
     @Param('topic') topic: string,
     @Query('question') question: string,
+    @Query('documentsToUse') documentsToUse?: string | string[],
   ) {
     const topicSlug = slugify(topic);
-    return this.ragService.query(topicSlug, question);
+    const docs = Array.isArray(documentsToUse)
+      ? documentsToUse
+      : documentsToUse
+        ? [documentsToUse]
+        : [];
+    return this.ragService.query(topicSlug, question, docs);
   }
 }

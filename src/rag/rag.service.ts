@@ -59,6 +59,20 @@ export class RagService {
     return collections.map((c) => c.name);
   }
 
+  async listDocuments(topic: string): Promise<string[]> {
+    const collection = await this.chromaClient.getCollection({ name: topic });
+    const allDocs = await collection.get();
+    const filenames = allDocs.metadatas
+      .map((meta) => (meta as any).filename)
+      .filter(Boolean);
+    return [...new Set(filenames)];
+  }
+
+  async deleteDocument(topic: string, filename: string) {
+    const collection = await this.chromaClient.getCollection({ name: topic });
+    await collection.delete({ where: { filename } });
+  }
+
   async addDocuments(
     topic: string,
     documents: Document[]
@@ -70,12 +84,26 @@ export class RagService {
     await vectorStore.addDocuments(documents);
   }
 
-  async query(topic: string, question: string) {
+  async query(
+    topic: string,
+    question: string,
+    documentsToUse?: string[],
+  ) {
     const vectorStore = new Chroma(this.embeddings, {
       collectionName: topic,
       url: CHROMA_URL,
     });
-    const retriever = vectorStore.asRetriever();
+
+    const retriever = vectorStore.asRetriever({
+      filter:
+        documentsToUse && documentsToUse.length > 0
+          ? {
+              filename: {
+                $in: documentsToUse,
+              },
+            }
+          : undefined,
+    });
 
     const template = `You are a helpful assistant. Use the following pieces of context to answer the question at the end.
 If you don't know the answer from the context provided, just say that you don't know, don't try to make up an answer.
