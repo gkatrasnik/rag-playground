@@ -1,10 +1,14 @@
 <template>
   <Fieldset legend="Query a Topic">
-    <Form @submit.prevent="queryTopic" class="p-fluid p-formgrid p-grid">
+    <Form @submit.prevent="queryTopic" >
+      <div class="dropdowns-container" >
         <Select v-model="selectedTopic" :options="topics" optionLabel="name" optionValue="id" placeholder="Select a Topic" @change="fetchDocuments" required />
         <MultiSelect v-model="selectedDocuments" :options="documents" optionLabel="name" optionValue="id" placeholder="Select Documents" />
+      </div>
+      <div class="query-container" >
         <InputText v-model="question" placeholder="Ask a question" required />
         <Button type="submit" label="Submit" />
+      </div>
     </Form>
     <Fieldset legend="Response" :toggleable="true" class="p-mt-4">
       <p>{{ response }}</p>
@@ -58,3 +62,16 @@ async function queryTopic() {
 
 onMounted(fetchTopics);
 </script>
+
+<style>
+  .dropdowns-container {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .query-container {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+</style>

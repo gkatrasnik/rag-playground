@@ -1,9 +1,11 @@
 <template>
   <Fieldset legend="Upload Documents">
-    <Form @submit.prevent="uploadFiles" class="p-fluid p-formgrid p-grid">
+    <Form @submit.prevent="uploadFiles">
+      <div class="buttons-container">
         <Select v-model="selectedTopic" :options="topics" optionLabel="name" optionValue="id" placeholder="Select a Topic" required />
         <FileUpload mode="basic" name="files[]" @select="handleFileChange" :multiple="true" chooseLabel="Choose Files" />
         <Button type="submit" label="Upload" />
+      </div>        
     </Form>
   </Fieldset>
 </template>
@@ -46,3 +48,11 @@ async function uploadFiles() {
 
 onMounted(fetchTopics);
 </script>
+
+<style>
+  .buttons-container {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+</style>

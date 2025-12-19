@@ -1,11 +1,9 @@
 <template>
-  <div class="card">
-    <div class="p-fluid">
-      <h1>RAG Playground</h1>
-      <Topics />
-      <Upload />
-      <Query />
-    </div>
+  <div>
+    <h1>RAG Playground</h1>
+    <Topics />
+    <Upload />
+    <Query />
   </div>
 </template>
 
@@ -22,9 +20,5 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-}
-.card {
-  width: 80%;
-  max-width: 800px;
 }
 </style>

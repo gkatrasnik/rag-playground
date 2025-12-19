@@ -1,11 +1,13 @@
 <template>
   <Fieldset legend="Topics">
     <Panel v-for="topic in topics" :key="topic.id" :header="topic.name" toggleable>
-      <Listbox :options="topic.documents" optionLabel="name" class="w-full" />
+      <Listbox :options="topic.documents" optionLabel="name" />
     </Panel>
-    <Form @submit.prevent="createTopic" class="p-fluid p-formgrid p-grid">
-      <InputText v-model="newTopicName" placeholder="New topic name" required />
-      <Button type="submit" label="Create Topic" />
+    <Form @submit.prevent="createTopic">
+      <div class="buttons-container">
+        <InputText v-model="newTopicName" placeholder="New topic name" required />
+        <Button type="submit" label="Create Topic" />
+      </div>      
     </Form>
   </Fieldset>
 </template>
