@@ -40,7 +40,11 @@ const {
 onMounted(async () => {
   await fetchTopics();
   if (topics.value.length > 0 && !selectedTopic.value) {
-    selectedTopic.value = topics.value[0].name;
+    if (topics.value[0] && topics.value[0].name) {
+      selectedTopic.value = topics.value[0].name;
+    } else {
+      selectedTopic.value = null;
+    }
   }
 });
 </script>

@@ -19,12 +19,12 @@ import Panel from 'primevue/panel';
 import { useRag } from '../composables/useRag';
 
 const props = defineProps<{
-  topicName: string;
+  topicName:string;
 }>();
 
 const { uploadDocuments } = useRag();
 const files = ref<File[]>([]);
-const fileUploadRef = ref<FileUpload | null>(null);
+const fileUploadRef = ref(null);
 
 function handleFileChange(event: FileUploadSelectEvent) {
   files.value = event.files;
@@ -38,7 +38,9 @@ async function handleUpload() {
 
 function clearFiles() {
   files.value = [];
-  fileUploadRef.value?.clear();
+  if (fileUploadRef.value) {
+    (fileUploadRef.value as any).clear();
+  }
 }
 </script>
 

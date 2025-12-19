@@ -1,22 +1,53 @@
 <template>
-  <div>
-    <h1>RAG Playground</h1>
-    <Topics />
-    <Query />
+  <div class="app-container">
+    <BurgerIcon @toggle="toggleDrawer" />
+    <SideDrawer :isOpen="isDrawerOpen" @toggle="toggleDrawer">
+      <Topics />
+    </SideDrawer>
+    <div class="main-content">
+      <h1>RAG Playground</h1>
+      <Query />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import Topics from './components/Topics.vue';
-  import Query from './components/Query.vue';
+import { ref } from 'vue';
+import Topics from './components/Topics.vue';
+import Query from './components/Query.vue';
+import SideDrawer from './components/SideDrawer.vue';
+import BurgerIcon from './components/BurgerIcon.vue';
+
+const isDrawerOpen = ref(true);
+
+const toggleDrawer = () => {
+  isDrawerOpen.value = !isDrawerOpen.value;
+};
 </script>
 
 <style>
 body {
   font-family: sans-serif;
-  margin: 2em;
+  margin: 0;
+}
+
+.app-container {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  overflow-x: hidden;
+}
+
+.main-content {
+  transition: margin-left 0.3s ease;
+  padding: 2em;
+  flex-grow: 1;
+}
+
+@media (min-width: 768px) {
+  .main-content.drawer-open {
+  }
+}
+
+h1 {
+  text-align: center;
 }
 </style>
