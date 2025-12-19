@@ -56,7 +56,14 @@ export class RagService {
 
   async listTopics() {
     const collections = await this.chromaClient.listCollections();
-    return collections.map((c) => c.name);
+    const topics = collections.map((c) => c.name);
+    const topicsWithDocs = await Promise.all(
+      topics.map(async (topic) => {
+        const documents = await this.listDocuments(topic);
+        return { name: topic, documents: documents.map((d) => ({ name: d })) };
+      }),
+    );
+    return topicsWithDocs;
   }
 
   async listDocuments(topic: string): Promise<string[]> {

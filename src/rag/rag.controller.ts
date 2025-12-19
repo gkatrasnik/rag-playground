@@ -89,18 +89,13 @@ export class RagController {
     return { message: `Documents added to topic '${topic}' successfully` };
   }
 
-  @Get('topics/:topic/query')
+  @Post('topics/:topic/query')
   async query(
     @Param('topic') topic: string,
-    @Query('question') question: string,
-    @Query('documentsToUse') documentsToUse?: string | string[],
+    @Body('question') question: string,
+    @Body('documentsToUse') documentsToUse?: string[],
   ) {
     const topicSlug = slugify(topic);
-    const docs = Array.isArray(documentsToUse)
-      ? documentsToUse
-      : documentsToUse
-        ? [documentsToUse]
-        : [];
-    return this.ragService.query(topicSlug, question, docs);
+    return this.ragService.query(topicSlug, question, documentsToUse);
   }
 }
