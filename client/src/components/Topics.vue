@@ -22,7 +22,7 @@
   </Fieldset>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { Form } from '@primevue/forms';
 import Button from 'primevue/button';

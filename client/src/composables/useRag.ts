@@ -1,18 +1,27 @@
 import { ref, watch } from 'vue';
 
-const topics = ref([]);
-const selectedTopic = ref(null);
-const documents = ref([]);
-const selectedDocuments = ref([]);
-const question = ref('');
-const response = ref('');
+interface Document {
+  name: string;
+}
+
+interface Topic {
+  name: string;
+  documents: Document[];
+}
+
+const topics = ref<Topic[]>([]);
+const selectedTopic = ref<string | null>(null);
+const documents = ref<Document[]>([]);
+const selectedDocuments = ref<string[]>([]);
+const question = ref<string>('');
+const response = ref<string>('');
 
 async function fetchTopics() {
   const res = await fetch('/api/rag/topics');
   topics.value = await res.json();
 }
 
-async function createTopic(name) {
+async function createTopic(name: string) {
   await fetch('/api/rag/topics', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -21,7 +30,7 @@ async function createTopic(name) {
   await fetchTopics();
 }
 
-async function uploadDocuments(files) {
+async function uploadDocuments(files: File[]) {
   if (!selectedTopic.value) return;
   const formData = new FormData();
   for (const file of files) {
@@ -49,7 +58,7 @@ async function queryTopic() {
   response.value = await res.text();
 }
 
-async function deleteTopic(topicName) {
+async function deleteTopic(topicName: string) {
   await fetch(`/api/rag/topics/${topicName}`, {
     method: 'DELETE',
   });
@@ -59,7 +68,7 @@ async function deleteTopic(topicName) {
   }
 }
 
-async function deleteDocument(topicName, documentName) {
+async function deleteDocument(topicName: string, documentName: string) {
   await fetch(`/api/rag/topics/${topicName}/documents/${documentName}`, {
     method: 'DELETE',
   });

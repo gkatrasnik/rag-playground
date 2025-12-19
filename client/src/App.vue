@@ -7,7 +7,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import Topics from './components/Topics.vue';
 import Upload from './components/Upload.vue';
 import Query from './components/Query.vue';

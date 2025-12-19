@@ -16,7 +16,7 @@
   </Fieldset>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted } from 'vue';
 import { Form } from '@primevue/forms';
 import Button from 'primevue/button';
@@ -40,7 +40,7 @@ const {
 onMounted(async () => {
   await fetchTopics();
   if (topics.value.length > 0 && !selectedTopic.value) {
-    selectedTopic.value = topics.value[0].id;
+    selectedTopic.value = topics.value[0].name;
   }
 });
 </script>

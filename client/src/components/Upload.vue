@@ -10,19 +10,19 @@
   </Fieldset>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { Form } from '@primevue/forms';
 import Button from 'primevue/button';
 import Select from 'primevue/select';
-import FileUpload from 'primevue/fileupload';
+import FileUpload, { type FileUploadSelectEvent } from 'primevue/fileupload';
 import Fieldset from 'primevue/fieldset';
 import { useRag } from '../composables/useRag';
 
 const { topics, selectedTopic, fetchTopics, uploadDocuments } = useRag();
-const files = ref([]);
+const files = ref<File[]>([]);
 
-function handleFileChange(event) {
+function handleFileChange(event: FileUploadSelectEvent) {
   files.value = event.files;
 }
 
