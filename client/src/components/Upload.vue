@@ -1,36 +1,45 @@
 <template>
-  <Fieldset legend="Upload Documents">
+  <Panel header="Upload documents" :toggleable="true" :collapsed="false">
     <Form @submit="handleUpload">
       <div class="buttons-container">
-        <Select v-model="selectedTopic" :options="topics" optionLabel="name" optionValue="name" placeholder="Select a Topic" required />
-        <FileUpload mode="basic" name="files[]" @select="handleFileChange" :multiple="true" chooseLabel="Choose Files" />
-        <Button type="submit" label="Upload" />
+        <FileUpload ref="fileUploadRef" mode="basic" name="files[]" @select="handleFileChange" :multiple="true" chooseLabel="Choose Files" />
+        <Button type="submit" label="Upload" :disabled="!files.length" />
+        <Button v-if="files.length" type="button" label="Clear" @click="clearFiles" severity="secondary" />
       </div>        
     </Form>
-  </Fieldset>
+  </Panel>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import { Form } from '@primevue/forms';
 import Button from 'primevue/button';
-import Select from 'primevue/select';
 import FileUpload, { type FileUploadSelectEvent } from 'primevue/fileupload';
-import Fieldset from 'primevue/fieldset';
+import Panel from 'primevue/panel';
 import { useRag } from '../composables/useRag';
 
-const { topics, selectedTopic, fetchTopics, uploadDocuments } = useRag();
+const props = defineProps<{
+  topicName: string;
+}>();
+
+const { uploadDocuments } = useRag();
 const files = ref<File[]>([]);
+const fileUploadRef = ref<FileUpload | null>(null);
 
 function handleFileChange(event: FileUploadSelectEvent) {
   files.value = event.files;
 }
 
 async function handleUpload() {
-  await uploadDocuments(files.value);
+  if (!files.value.length) return;
+  await uploadDocuments(files.value, props.topicName);
+  clearFiles();
 }
 
-onMounted(fetchTopics);
+function clearFiles() {
+  files.value = [];
+  fileUploadRef.value?.clear();
+}
 </script>
 
 <style>

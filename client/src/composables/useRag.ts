@@ -1,13 +1,5 @@
 import { ref, watch } from 'vue';
-
-interface Document {
-  name: string;
-}
-
-interface Topic {
-  name: string;
-  documents: Document[];
-}
+import type { Topic, Document } from '../types';
 
 const topics = ref<Topic[]>([]);
 const selectedTopic = ref<string | null>(null);
@@ -30,18 +22,18 @@ async function createTopic(name: string) {
   await fetchTopics();
 }
 
-async function uploadDocuments(files: File[]) {
-  if (!selectedTopic.value) return;
-  const formData = new FormData();
-  for (const file of files) {
-    formData.append('files', file);
+async function uploadDocuments(files: File[], topicName?: string) {
+  const topic = topicName || selectedTopic.value;
+  if (!topic) {
+    console.error('No topic selected');
+    return;
   }
-
-  await fetch(`/api/rag/topics/${selectedTopic.value}/documents`, {
+  const formData = new FormData();
+  files.forEach(file => formData.append('files', file));
+  await fetch(`/api/rag/topics/${topic}/documents`, {
     method: 'POST',
     body: formData,
   });
-
   await fetchTopics();
 }
 

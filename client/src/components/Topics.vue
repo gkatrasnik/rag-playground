@@ -1,24 +1,15 @@
 <template>
   <Fieldset legend="Topics">
-    <Panel v-for="topic in topics" :key="topic.name" :header="topic.name" toggleable>
-      <template #icons>
-        <Button icon="pi pi-trash" class="p-panel-header-icon p-link p-mr-2" @click="deleteTopic(topic.name)" />
-      </template>
-      <Listbox :options="topic.documents" optionLabel="name">
-        <template #option="slotProps">
-          <div class="document-item">
-            <span>{{ slotProps.option.name }}</span>
-            <Button icon="pi pi-trash" class="p-button-sm p-button-text" @click="deleteDocument(topic.name, slotProps.option.name)" />
-          </div>
-        </template>
-      </Listbox>
-    </Panel>
-    <Form @submit="handleCreateTopic">
-      <div class="buttons-container">
-        <InputText v-model="newTopicName" placeholder="New topic name" required />
-        <Button type="submit" label="Create Topic" />
-      </div>      
-    </Form>
+    <div class="topics-container">
+      <Form @submit="handleCreateTopic">
+        <div class="buttons-container">
+          <InputText v-model="newTopicName" placeholder="New topic name" required />
+          <Button type="submit" label="Create Topic" />
+        </div>      
+      </Form>
+
+      <Topic v-for="topic in topics" :key="topic.name" :topic="topic" />    
+    </div>
   </Fieldset>
 </template>
 
@@ -27,12 +18,11 @@ import { ref, onMounted } from 'vue';
 import { Form } from '@primevue/forms';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
-import Panel from 'primevue/panel';
 import Fieldset from 'primevue/fieldset';
-import Listbox from 'primevue/listbox';
 import { useRag } from '../composables/useRag';
+import Topic from './Topic.vue';
 
-const { topics, fetchTopics, createTopic, deleteTopic, deleteDocument } = useRag();
+const { topics, fetchTopics, createTopic } = useRag();
 const newTopicName = ref('');
 
 async function handleCreateTopic() {
@@ -44,15 +34,15 @@ onMounted(fetchTopics);
 </script>
 
 <style>
+  .topics-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
   .buttons-container {
     display: flex;
     gap: 1rem;
     align-items: center;
-  }
-  .document-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-  }
+  }  
 </style>
