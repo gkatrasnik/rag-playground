@@ -1,12 +1,13 @@
 import { ref, watch } from 'vue';
-import type { Topic, Document } from '../types';
+import type { Topic, Document, Message } from '../types';
 
 const topics = ref<Topic[]>([]);
-const selectedTopic = ref<string | null>(null);
+const selectedTopic = ref<Topic | null>(null);
 const documents = ref<Document[]>([]);
 const selectedDocuments = ref<string[]>([]);
 const question = ref<string>('');
 const response = ref<string>('');
+const messages = ref<Message[]>([]);
 
 async function fetchTopics() {
   const res = await fetch('/api/rag/topics');
@@ -23,7 +24,7 @@ async function createTopic(name: string) {
 }
 
 async function uploadDocuments(files: File[], topicName?: string) {
-  const topic = topicName || selectedTopic.value;
+  const topic = topicName || selectedTopic.value?.name;
   if (!topic) {
     console.error('No topic selected');
     return;
@@ -39,25 +40,34 @@ async function uploadDocuments(files: File[], topicName?: string) {
 
 async function queryTopic() {
   if (!selectedTopic.value) return;
-  const res = await fetch(`/api/rag/topics/${selectedTopic.value}/query`, {
+
+  var newQuestion = question.value.trim();
+  if (newQuestion === '') return;
+
+  question.value = ''; //reset question input
+  messages.value.push({ content: newQuestion, sender: 'user' });
+
+  const res = await fetch(`/api/rag/topics/${selectedTopic.value.name}/query`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      question: question.value,
+      question: newQuestion,
       documentsToUse: selectedDocuments.value,
     }),
   });
   response.value = await res.text();
+  messages.value.push({ content: response.value, sender: 'rag' });
 }
 
 async function deleteTopic(topicName: string) {
   await fetch(`/api/rag/topics/${topicName}`, {
     method: 'DELETE',
   });
-  await fetchTopics();
-  if (selectedTopic.value === topicName) {
+  
+  if (selectedTopic.value?.name === topicName) {
     selectedTopic.value = null;
   }
+  await fetchTopics();
 }
 
 async function deleteDocument(topicName: string, documentName: string) {
@@ -69,14 +79,15 @@ async function deleteDocument(topicName: string, documentName: string) {
 
 watch(selectedTopic, (newTopic, oldTopic) => {
   if (newTopic) {
-    const topic = topics.value.find(t => t.name === newTopic);
-    documents.value = topic ? topic.documents : [];
-    if (newTopic !== oldTopic) {
-      selectedDocuments.value = [];
+    documents.value = newTopic.documents;
+    if (newTopic.name !== oldTopic?.name) {
+      selectedDocuments.value = newTopic.documents.map(doc => doc.name);
+      messages.value = [];
     }
   } else {
     documents.value = [];
     selectedDocuments.value = [];
+    messages.value = [];
   }
 });
 
@@ -88,6 +99,7 @@ export function useRag() {
     selectedDocuments,
     question,
     response,
+    messages,
     fetchTopics,
     createTopic,
     uploadDocuments,
