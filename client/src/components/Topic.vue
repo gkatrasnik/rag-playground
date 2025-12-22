@@ -1,7 +1,7 @@
 <template>
-  <Panel :header="topic.name" toggleable collapsed class="topic-panel">  
+  <Panel :header="topic.name" toggleable :collapsed="!isSelected" @click.capture="handlePanelClick" :class="{ 'p-panel-selected': isSelected }">
     <template #icons>
-      <Button icon="pi pi-trash" class="p-panel-header-icon p-link p-mr-2" text @click="deleteTopic(topic.name)" />         
+      <Button icon="pi pi-trash" class="p-button-sm p-button-text" @click.stop="deleteTopic(topic.name)" />
     </template>
     <div class="topic-content-container">
       <Button label="Add documents" @click="isUploadDialogVisible = true" />
@@ -9,7 +9,7 @@
         <Upload :topicName="topic.name" @uploaded="isUploadDialogVisible = false" />
       </Dialog>
 
-      <Listbox v-if="topic.documents.length > 0" :options="topic.documents" optionLabel="name">
+      <Listbox v-if="topic.documents.length > 0" :options="topic.documents" optionLabel="name" optionValue="name" v-model="selectedDocuments" multiple>
         <template #option="slotProps">
             <div class="document-item">
             <span>{{ slotProps.option.name }}</span>
@@ -31,15 +31,22 @@ import Dialog from 'primevue/dialog';
 import Panel from 'primevue/panel';
 import { ref } from 'vue';
 
-
-defineProps<{
+const props = defineProps<{
   topic: Topic;
+  isSelected: boolean;
 }>();
 
+const emit = defineEmits(['select']);
 const isUploadDialogVisible = ref(false);
+const { deleteDocument, deleteTopic, selectedDocuments } = useRag();
 
-const { deleteDocument, deleteTopic } = useRag();
-
+function handlePanelClick(event: MouseEvent) {
+  const target = event.target as HTMLElement;
+  if (target.closest('.p-panel-header-icon') || target.closest('button')) {
+    return;
+  }
+  emit('select');
+}
 </script>
 
 <style scoped>
@@ -58,5 +65,11 @@ const { deleteDocument, deleteTopic } = useRag();
         justify-content: space-between;
         align-items: center;
         width: 100%;
+    }
+    :deep(.p-panel-header) {
+        cursor: pointer;
+    }
+    .p-panel-selected {
+      border-left: 5px solid var(--p-primary-color);
     }
 </style>

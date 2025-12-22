@@ -15,7 +15,6 @@ import { ref } from 'vue';
 import { Form } from '@primevue/forms';
 import Button from 'primevue/button';
 import FileUpload, { type FileUploadSelectEvent } from 'primevue/fileupload';
-import Panel from 'primevue/panel';
 import { useRag } from '../composables/useRag';
 
 const props = defineProps<{
@@ -53,7 +52,6 @@ function clearFiles() {
   .controls-container {
     display: flex;
     gap: 1rem;
-    align-items: center;
     justify-content: space-between;
   }
   .buttons-container {

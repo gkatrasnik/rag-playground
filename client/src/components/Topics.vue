@@ -9,7 +9,7 @@
       <DataView :value="topics">
         <template #list="slotProps">
           <div class="topics-container">       
-            <Topic v-for="(topic, index) in slotProps.items" :key="index" :topic="topic" />
+            <Topic v-for="(topic, index) in slotProps.items" :key="index" :topic="topic" :isSelected="selectedTopic?.name === topic.name" @select="selectedTopic = topic" />
           </div>
         </template>
       </DataView>
@@ -25,11 +25,9 @@ import Fieldset from 'primevue/fieldset';
 import DataView from 'primevue/dataview';
 import { useRag } from '../composables/useRag';
 import Topic from './Topic.vue';
-import type { Topic as TopicType } from '../types';
 
-const { topics, fetchTopics, createTopic, deleteTopic } = useRag();
+const { topics, fetchTopics, createTopic, selectedTopic } = useRag();
 const newTopicName = ref('');
-const selectedTopic = ref<TopicType | null>(null);
 
 async function handleCreateTopic() {
   await createTopic(newTopicName.value);
