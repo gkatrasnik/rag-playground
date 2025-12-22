@@ -1,39 +1,37 @@
 <template>
-  <Panel :header="topic.name" toggleable class="topic-panel">
-    <template #icons>
-      <Button icon="pi pi-trash" class="p-panel-header-icon p-link p-mr-2" @click="deleteTopic(topic.name)" />
-    </template>
-    <div class="topic-content-container">
-        <Upload :topicName="topic.name" />
-        <Listbox :options="topic.documents" optionLabel="name">
-        <template #option="slotProps">
-            <div class="document-item">
-            <span>{{ slotProps.option.name }}</span>
-            <Button icon="pi pi-trash" class="p-button-sm p-button-text" @click="deleteDocument(topic.name, slotProps.option.name)" />
-            </div>
-        </template>
-        </Listbox>
-    </div>
-  </Panel>
+  <div class="topic-content-container">
+    <Button label="Add documents" @click="isUploadDialogVisible = true" />
+    <Dialog v-model:visible="isUploadDialogVisible" modal header="Upload Documents" :style="{ width: '50rem' }">
+      <Upload :topicName="topic.name" @uploaded="isUploadDialogVisible = false" />
+    </Dialog>
+
+    <Listbox v-if="topic.documents.length > 0" :options="topic.documents" optionLabel="name">
+      <template #option="slotProps">
+          <div class="document-item">
+          <span>{{ slotProps.option.name }}</span>
+          <Button icon="pi pi-trash" class="p-button-sm p-button-text" @click="deleteDocument(topic.name, slotProps.option.name)" />
+          </div>
+      </template>
+    </Listbox>
+  </div>
 </template>
 
 <script setup lang="ts">
 import type { Topic } from '../types';
 import { useRag } from '../composables/useRag';
 import Upload from './Upload.vue';
-import Panel from 'primevue/panel';
 import Button from 'primevue/button';
 import Listbox from 'primevue/listbox';
+import Dialog from 'primevue/dialog';
+import { ref } from 'vue';
 
 defineProps<{
   topic: Topic;
 }>();
 
-const emit = defineEmits<{
-  (e: 'delete', topicName: string): void;
-}>();
+const isUploadDialogVisible = ref(false);
 
-const { deleteDocument, deleteTopic } = useRag();
+const { deleteDocument } = useRag();
 
 </script>
 
