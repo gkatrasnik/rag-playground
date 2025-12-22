@@ -5,7 +5,6 @@
       <Topics />
     </SideDrawer>
     <div class="main-content">
-      <h1>RAG Playground</h1>
       <Query />
     </div>
   </div>
@@ -40,6 +39,8 @@ body {
   transition: margin-left 0.3s ease;
   padding: 2em;
   flex-grow: 1;
+  display: flex;
+  justify-content: center;
 }
 
 @media (min-width: 768px) {

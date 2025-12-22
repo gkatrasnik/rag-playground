@@ -1,23 +1,29 @@
 <template>
-  <Fieldset :legend="selectedTopic?.name || 'Please select a topic'">
-        <div class="chat-container" ref="chatContainer">
+  <div class="query-component">
+    <div class="chat-container" ref="chatContainer">
       <div v-for="(message, index) in messages" :key="index" :class="['message-container', message.sender]">
         <div class="message-bubble">{{ message.content }}</div>
       </div>
-    </div>
-    <Form @submit="queryTopic" >
-      <div class="query-container" >
-        <InputText 
-          v-model="question" 
-          :placeholder="selectedTopic ? 'Ask a question' : 'Please select a topic in sidebar'" 
-          required 
-          fluid 
-          :disabled="!selectedTopic"
-        />
-        <Button type="submit" label="Submit" />
+      <div v-if="isLoading" class="message-container rag">
+        <div class="message-bubble">Answering...</div>
       </div>
-    </Form>    
-  </Fieldset>
+    </div>
+    <Fieldset :legend="selectedTopic?.name || 'Please select a topic'">
+      <Form @submit="queryTopic" >
+        <div class="query-container" >
+          <InputText 
+            v-model="question" 
+            :placeholder="selectedTopic ? 'Ask a question' : 'Please select a topic in sidebar'" 
+            required 
+            fluid 
+            :disabled="!selectedTopic || isLoading"
+            size="large"
+          />
+          <Button type="submit" label="Submit" :disabled="isLoading" />
+        </div>
+      </Form>    
+    </Fieldset>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -32,7 +38,8 @@ const {
   selectedTopic, 
   question,
   messages,
-  queryTopic 
+  queryTopic,
+  isLoading,
 } = useRag();
 
 const chatContainer = ref<HTMLElement | null>(null);
@@ -47,13 +54,23 @@ watch(messages, () => {
 </script>
 
 <style>
+  .query-component {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    width: 100%;
+    max-width: 800px;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+  }
   .chat-container {
-    height: 400px;
+    height: 75vh;    
     overflow-y: auto;
-    border: 1px solid var(--p-fieldset-border-color);
-    border-radius: var(--p-fieldset-border-radius);
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    /* border: 1px solid var(--p-fieldset-border-color); */
     padding: 1rem;
-    margin-bottom: 1rem;
   }
   .message-container {
     display: flex;

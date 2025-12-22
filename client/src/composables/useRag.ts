@@ -8,6 +8,7 @@ const selectedDocuments = ref<string[]>([]);
 const question = ref<string>('');
 const response = ref<string>('');
 const messages = ref<Message[]>([]);
+const isLoading = ref(false);
 
 async function fetchTopics() {
   const res = await fetch('/api/rag/topics');
@@ -44,6 +45,7 @@ async function queryTopic() {
   var newQuestion = question.value.trim();
   if (newQuestion === '') return;
 
+  isLoading.value = true;
   question.value = ''; //reset question input
   messages.value.push({ content: newQuestion, sender: 'user' });
 
@@ -57,6 +59,7 @@ async function queryTopic() {
   });
   response.value = await res.text();
   messages.value.push({ content: response.value, sender: 'rag' });
+  isLoading.value = false;
 }
 
 async function deleteTopic(topicName: string) {
@@ -100,11 +103,13 @@ export function useRag() {
     question,
     response,
     messages,
+    isLoading,
     fetchTopics,
     createTopic,
     uploadDocuments,
     queryTopic,
     deleteTopic,
     deleteDocument,
+    isLoading,
   };
 }
