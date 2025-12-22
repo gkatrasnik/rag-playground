@@ -3,22 +3,16 @@
     <Form @submit="handleCreateTopic">
       <div class="buttons-container">
         <InputText v-model="newTopicName" placeholder="New topic name" required />
-        <Button type="submit" label="Create Topic" />
+        <Button type="submit" label="Add Topic" />
       </div>      
     </Form>
-    <Accordion value="0">
-      <AccordionPanel v-for="topic in topics" :key="topic.name" :value="topics.indexOf(topic).toString()">
-        <AccordionHeader>
-          <span class="accordion-header-content">
-            {{ topic.name }}
-            <Button icon="pi pi-trash" class="ml-auto mr-2" text @click="deleteTopic(topic.name)" />
-          </span>
-        </AccordionHeader>
-        <AccordionContent>
-          <Topic :topic="topic" />
-        </AccordionContent>
-      </AccordionPanel>
-    </Accordion>
+      <DataView :value="topics">
+        <template #list="slotProps">
+          <div class="topics-container">       
+            <Topic v-for="(topic, index) in slotProps.items" :key="index" :topic="topic" />
+          </div>
+        </template>
+      </DataView>
   </Fieldset>
 </template>
 
@@ -28,16 +22,14 @@ import { Form } from '@primevue/forms';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Fieldset from 'primevue/fieldset';
+import DataView from 'primevue/dataview';
 import { useRag } from '../composables/useRag';
 import Topic from './Topic.vue';
-
-import Accordion from 'primevue/accordion';
-import AccordionPanel from 'primevue/accordionpanel';
-import AccordionHeader from 'primevue/accordionheader';
-import AccordionContent from 'primevue/accordioncontent';
+import type { Topic as TopicType } from '../types';
 
 const { topics, fetchTopics, createTopic, deleteTopic } = useRag();
 const newTopicName = ref('');
+const selectedTopic = ref<TopicType | null>(null);
 
 async function handleCreateTopic() {
   await createTopic(newTopicName.value);
@@ -48,16 +40,17 @@ onMounted(fetchTopics);
 </script>
 
 <style>
+   .topics-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+  }
+
   .buttons-container {
     display: flex;
     gap: 1rem;
     align-items: center;
+    margin-bottom: 1rem;
   }  
-
-  .accordion-header-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-  }
 </style>
